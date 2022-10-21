@@ -9,7 +9,7 @@
   },
   "repetitions": 1,
   "duration": 60000,
-  "browsers": ["chrome", "samsung"],
+  "browsers": ["chrome"],
   "monkeyrunner_path": "/home/pi/Android/Sdk/tools/bin/monkeyrunner",
   "systrace_path": "/usr/lib/android-sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/examples/batterystats/Scripts/power_profile.xml", 
