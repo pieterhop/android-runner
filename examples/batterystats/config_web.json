@@ -9,14 +9,12 @@
   },
   "repetitions": 1,
   "duration": 60000,
-  "browsers": ["chrome"],
+  "browsers": ["chrome", "samsung"],
   "monkeyrunner_path": "/home/pi/Android/Sdk/tools/bin/monkeyrunner",
   "systrace_path": "/usr/lib/android-sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/examples/batterystats/Scripts/power_profile.xml", 
   "paths": [
-    "https://greenlab.myddns.me/C/01_fannkuchredux/fannkuchredux.gcc-6.gcc_run.html",
-    "https://greenlab.myddns.me/C/02_nbody/nbody.gcc-8.gcc_run.html",
-    "https://greenlab.myddns.me/C/03_spectralnorm_DNR/spectralnorm.gcc-5.gcc_run.html"
+    "https://greenlab.myddns.me/C/02_nbody/nbody.gcc-8.gcc_run.html"
   ],
   "profilers": {
     "batterystats": {
