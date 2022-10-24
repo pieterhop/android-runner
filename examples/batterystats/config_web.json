@@ -15,9 +15,14 @@
   ],
   "profilers": {
     "batterystats": {
-      "cleanup": true
+      "cleanup": true,
+      "subject_aggregation": "default",
+      "experiment_aggregation": "default",
+      "enable_systrace_parsing": true,
+      "python2_path": "python2"
     }
   },
+  "adb_path": "/usr/bin/adb",
   "scripts": {
     "before_experiment": "Scripts/before_experiment.py",
     "before_run": "Scripts/before_run.py",

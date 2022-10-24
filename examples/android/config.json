@@ -1,7 +1,7 @@
 {
   "type": "native",
   "devices": {
-    "nexus6p": {}
+    "j7duo2": {}
   },
   "repetitions": 1,
   "apps": [
