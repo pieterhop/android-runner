@@ -1,7 +1,11 @@
 {
     "type": "web",
     "devices": {
-      "j7duo2": {}
+      "j7duo2": {
+        "root_disable_charging": true,
+        "charging_disabled_value": 1,
+        "usb_charging_disabled_file": "/sys/class/power_supply/usb/device/charge"
+      }
     },
     "repetitions": 10,
     "duration": 60000,
