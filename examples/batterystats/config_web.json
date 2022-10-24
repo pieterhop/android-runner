@@ -5,7 +5,7 @@
   },
   "repetitions": 1,
   "duration": 60000,
-  "browsers": ["chrome"],
+  "browsers": ["samsung"],
   "systrace_path": "/usr/lib/android-sdk/platform-tools/systrace/systrace.py",
   "powerprofile_path": "android-runner/examples/batterystats/Scripts/power_profile.xml", 
   "paths": [
@@ -14,8 +14,6 @@
   "profilers": {
     "batterystats": {
       "cleanup": true,
-      "subject_aggregation": "default",
-      "experiment_aggregation": "default",
       "enable_systrace_parsing": true,
       "python2_path": "python2"
     }
@@ -38,6 +36,6 @@
     "after_experiment": "Scripts/after_experiment.py"
   },
   "time_between_run": 1000,
-  "run_stopping_condition" : {"post_request" : {"server_port" : 2222}}
+  "run_stopping_condition" : {"post_request" : {}}
 
 }
