@@ -8,14 +8,14 @@
   "duration": 60000,
   "browsers": ["chrome"],
   "systrace_path": "/usr/lib/android-sdk/platform-tools/systrace/systrace.py",
-  "powerprofile_path": "android-runner/examples/batterystats/Scripts/power_profile.xml", 
+  "powerprofile_path": "android-runner/examples/batterystats/Scripts/power_profile.xml",
   "paths": [
     "https://greenlab.myddns.me/Rust/04_mandelbrot/dist/wasm_exec.html"
   ],
   "profilers": {
     "batterystats": {
       "cleanup": true,
-      "enable_systrace_parsing": true,
+      "enable_systrace_parsing": false,
       "python2_path": "python2"
     }
   },
@@ -38,7 +38,6 @@
   },
   "time_between_run": 1000,
   "run_stopping_condition" : {
-    "post_request" : {},
-    "logcat_regex" : {"regex": "=INTERACTION="}
+    "post_request" : {}
   }
 }
