@@ -5,6 +5,8 @@ import os.path as op
 import subprocess
 import time
 import shlex
+import zlib
+import re
 from collections import OrderedDict
 
 from AndroidRunner.Plugins.batterystats import BatterystatsParser
@@ -80,15 +82,40 @@ class Batterystats(Profiler):
         """Runs the systrace method for self.duration seconds in a separate thread"""
         # TODO: Check if 'systrace freq idle' is supported by the device
         global sysproc
+        self._errored = False # FIXME: dirty hack
 
         # Run systrace in another thread.
-        cmd = '{} freq idle -b 81920 -e {} -a {} -o {}'.format(self.systrace, device.id, application, systrace_file)
-        sysproc = subprocess.Popen(shlex.split(cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ps = subprocess.run(['adb', 'shell', 'mkdir -p /storage/self/primary/tmp'], check=True, stderr=subprocess.PIPE)
+        if ps.stderr != b'':
+            raise RuntimeError(ps.stderr)
+        subprocess.run(['adb', 'shell', 'echo 0 > /sys/kernel/debug/tracing/tracing_on'], check=True) # disable tracing in case it was enabled
+        time.sleep(1)
+        # subprocess.run(['adb', 'shell', 'cat /sys/kernel/debug/tracing/trace > /dev/null'], check=True, stdout=subprocess.DEVNULL) # Should we clear ring buffer?
+        ps = subprocess.run(shlex.split(
+            f'adb shell atrace -z -b 10240 -a {application} freq idle --async_start'), # buffer size is per-cpu, so you get a lot more
+            check=True, stderr=subprocess.PIPE
+        )
+        if ps.stderr != b'':
+            # stop_profiling will take care of stopping atrace because even if it errors it does not stop
+            self._errored = True
+            raise RuntimeError(ps.stderr.decode('ascii'))
 
     def stop_profiling(self, device, **kwargs):
         # batterystats does not need to be stopped. systrace is stopped in the collect_results function
         # since it needs to run a little bit longer than the rest (see original implementation where it runs for 5 secs longer)
+        ps = subprocess.run(shlex.split(
+            f'adb shell atrace -z --async_stop -o /storage/self/primary/tmp/atrace.out'),
+            check=True,
+            stderr=subprocess.PIPE
+        )
+        if not ps.stderr == b'':
+            raise RuntimeError(ps.stderr)
+        if self._errored:
+            return
         self.profile = False
+
+        # self._systrace_content = ps.stdout.decode('ascii') #FIXME: dirty hack
+        # self.logger.debug('self._systrace_content: ' + self._systrace_content)
 
     # Pull logcat file from device
     @staticmethod
@@ -126,11 +153,63 @@ class Batterystats(Profiler):
 
     def get_systrace_results(self, device):
         logger = logging.getLogger(self.__class__.__name__)
-        global sysproc
-        stdout, stderr = sysproc.communicate(input=b"\n")
-        sysproc.wait()
-        logger.info("systrace.py stdout: " + stdout.decode('ascii'))
-        logger.info("systrace.py stderr: " + stderr.decode('ascii'))
+        ps = subprocess.run(['adb', 'pull', '/storage/self/primary/tmp/atrace.out', systrace_file], check=True, stderr=subprocess.PIPE)
+        if not ps.stderr == b'':
+            raise RuntimeError(ps.stderr)
+
+        def strip_and_decompress_trace(trace_data: bytes):
+            """From atrace_agent.py
+            Fixes new-lines and decompresses trace data.
+
+            Args:
+              trace_data: The trace data returned by atrace.
+            Returns:
+              The decompressed trace data.
+            """
+            # Collapse CRLFs that are added by adb shell.
+            if trace_data.startswith(b'\r\n'):
+                trace_data = trace_data.replace(b'\r\n', b'\n')
+            elif trace_data.startswith(b'\r\r\n'):
+                # On windows, adb adds an extra '\r' character for each line.
+                trace_data = trace_data.replace(b'\r\r\n', b'\n')
+
+            # Skip the initial newline.
+            if trace_data[0:1] == b'\n':
+                trace_data = trace_data[1:]
+
+            if not trace_data.startswith(b'# tracer'):
+                # No header found, so assume the data is compressed.
+                trace_data = zlib.decompress(trace_data)
+
+            # Enforce Unix line-endings.
+            trace_data = trace_data.replace(b'\r', b'')
+
+            # Skip any initial newlines.
+            while trace_data and trace_data[0:1] == b'\n':
+                trace_data = trace_data[1:]
+
+            return trace_data
+
+        def _collect_trace_data():
+            """Reads the output from atrace and stops the trace."""
+            TRACE_START_REGEXP = rb'TRACE\:'
+            ADB_IGNORE_REGEXP = rb'^capturing trace\.\.\. done|^capturing trace\.\.\.'
+
+            with open(systrace_file, 'rb') as f:
+                result = f.read()
+
+            data_start = re.search(TRACE_START_REGEXP, result)
+            if data_start:
+                data_start = data_start.end(0)
+            else:
+                raise IOError('Unable to get atrace data. Did you forget adb root?')
+            output = re.sub(ADB_IGNORE_REGEXP, b'', result[data_start:])
+            return output
+
+        data=_collect_trace_data()
+        data = strip_and_decompress_trace(data)
+        with open(systrace_file, 'w') as f: # overwrite file
+            f.write(data.decode('ascii'))
 
         cores = int(device.shell('cat /proc/cpuinfo | grep processor | wc -l'))
 
@@ -158,6 +237,7 @@ class Batterystats(Profiler):
             os.remove(systrace_file)
             os.remove(logcat_file)
             os.remove(batterystats_file)
+            subprocess.run(['adb', 'shell', 'rm -f /storage/self/primary/tmp/atrace.out'], check=True)
 
     def collect_results(self, device, path=None):
         self.pull_logcat(device)
