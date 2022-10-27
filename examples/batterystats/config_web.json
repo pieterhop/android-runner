@@ -1,7 +1,7 @@
 {
   "type": "web",
   "devices": {
-    "j7wireless": {
+    "j7duo2": {
     }
   },
   "repetitions": 1,
