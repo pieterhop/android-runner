@@ -1,7 +1,7 @@
 {
   "type": "web",
   "devices": {
-    "j7duo2": {
+    "j7wireless": {
     }
   },
   "repetitions": 1,
@@ -40,9 +40,5 @@
   "run_stopping_condition" : {
     "post_request" : {},
     "logcat_regex" : {"regex" : "400"}
-  },
-  "usb_handler" : {
-    "enable_command": "sudo uhubctl -l 1-1 -p 2 -a 0",
-    "disable_command": "sudo uhubctl -l 1-1 -p 2 -a 1" 
   }
 }
