@@ -916,7 +916,7 @@ class TestWebExperiment(object):
         device_config = {'devices': 'fake_device'}
         web_experiment = WebExperiment(device_config, None, False)
 
-        assert check_dependencies.call_count == 2
+        assert check_dependencies.call_count == 3
         assert web_experiment.duration == 0
         get_browser.assert_called_once_with('chrome')
         mock_browser.assert_called_once_with()
@@ -926,13 +926,13 @@ class TestWebExperiment(object):
     @patch('AndroidRunner.Devices.Devices.__init__')
     def test_init_nom_empty_config(self, device, check_dependencies, get_browser):
         device.return_value = None
-        device_config = {'devices': 'fake_device', 'browsers': ['firefox', 'opera'], 'duration': 1000}
+        device_config = {'devices': 'fake_device', 'browsers': ['firefox', 'opera', 'samsung'], 'duration': 1000}
         web_experiment = WebExperiment(device_config, None, False)
 
-        assert check_dependencies.call_count == 2
+        assert check_dependencies.call_count == 3
         assert web_experiment.duration == 1
-        assert len(web_experiment.browsers) == 2
-        expected_calls = [call('firefox'), call()(), call('opera'), call()()]
+        assert len(web_experiment.browsers) == 3
+        expected_calls = [call('firefox'), call()(), call('opera'), call()(), call('samsung'), call()()]
         assert get_browser.mock_calls == expected_calls
 
     @patch('AndroidRunner.WebExperiment.WebExperiment.after_run')
