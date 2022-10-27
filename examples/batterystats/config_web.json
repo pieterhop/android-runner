@@ -42,7 +42,7 @@
     "logcat_regex" : {"regex" : "400"}
   },
   "usb_handler" : {
-    "enable_command": "sudo uhubctl -l 2 -a 1",
-    "disable_command": "sudo uhubctl -l 2 -a 0" 
+    "enable_command": "sudo uhubctl -l 1-1 -p 2 -a 0",
+    "disable_command": "sudo uhubctl -l 1-1 -p 2 -a 0" 
   }
 }
