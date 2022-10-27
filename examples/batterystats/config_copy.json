@@ -42,8 +42,8 @@
     },
     "time_between_run": 120000,
     "usb_handler" : {
-      "enable_command": "sudo uhubctl -l 1-1 -p 2 -a 0",
-      "disable_command": "sudo uhubctl -l 1-1 -p 2 -a 1" 
+      "enable_command": "sudo uhubctl -l 1-1 -p 2 -a 1",
+      "disable_command": "sudo uhubctl -l 1-1 -p 2 -a 0" 
     }
   }
   
