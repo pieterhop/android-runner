@@ -92,7 +92,7 @@ class Batterystats(Profiler):
         time.sleep(1)
         # subprocess.run(['adb', 'shell', 'cat /sys/kernel/debug/tracing/trace > /dev/null'], check=True, stdout=subprocess.DEVNULL) # Should we clear ring buffer?
         ps = subprocess.run(shlex.split(
-            f'adb shell atrace -z -b 10000 -a {application} freq idle --async_start'), # buffer size is per-cpu, so you get a lot more
+            f'adb shell atrace -z -b 2000 -a {application} freq idle --async_start'), # buffer size is per-cpu, so you get a lot more
             check=True, stderr=subprocess.PIPE
         )
         if ps.stderr != b'':
