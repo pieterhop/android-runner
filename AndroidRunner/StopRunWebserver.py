@@ -23,36 +23,43 @@ class StopRunWebserver(BaseHTTPRequestHandler):
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
     def do_POST(self): #pragma: no cover
-        """ Handles incoming HTTP POST requests by:
-            1. writing the HTTP POST request payload to a file.
-            2. Stopping the server so the process can write to the queue and the run is stopped.
-        """ 
-        self.logger = logging.getLogger(self.__class__.__name__)
+        try: 
+            """ Handles incoming HTTP POST requests by:
+                1. writing the HTTP POST request payload to a file.
+                2. Stopping the server so the process can write to the queue and the run is stopped.
+            """ 
+            self.logger = logging.getLogger(self.__class__.__name__)
+    
+            if self.headers["Content-Length"] != None and int(self.headers["Content-Length"]) > 0:
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
 
-        if self.headers["Content-Length"] != None and int(self.headers["Content-Length"]) > 0:
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
+                dir_path = op.join(paths.OUTPUT_DIR, "http_post_request_payloads") 
+                makedirs(dir_path)
 
-            dir_path = op.join(paths.OUTPUT_DIR, "http_post_request_payloads") 
-            makedirs(dir_path)
+                file_ = datetime.datetime.now().strftime("%Y_%m_%dT%H_%M_%S_%f")
+                if self.headers["Content-type"] == "application/json":
+                    filename = op.join(dir_path, f"{file_}.json")
+                else:
+                    filename = op.join(dir_path, f"{file_}.txt")
 
-            file_ = datetime.datetime.now().strftime("%Y_%m_%dT%H_%M_%S_%f")
-            if self.headers["Content-type"] == "application/json":
-                filename = op.join(dir_path, f"{file_}.json")
+                with open(filename, 'w+') as opened_file:
+                    opened_file.write(post_data.decode("utf-8"))
+                    self.logger.info(f"Wrote HTTP POST request payload to {filename}")
             else:
-                filename = op.join(dir_path, f"{file_}.txt")
+                self.logger.info("Received HTP POST request did not contain a payload.")
 
-            with open(filename, 'w+') as opened_file:
-                opened_file.write(post_data.decode("utf-8"))
-                self.logger.info(f"Wrote HTTP POST request payload to {filename}")
-        else:
-            self.logger.info("Received HTP POST request did not contain a payload.")
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
 
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
+            def kill_server(server):
+                server.shutdown()
 
-        def kill_server(server):
-            server.shutdown()
+            threading.Thread(target=kill_server, args=(self.server,)).start()
+        except:
+            self.logger.info("Received HTTPS POST Bad Request.")
+            def kill_server(server):
+                server.shutdown()
 
-        threading.Thread(target=kill_server, args=(self.server,)).start()
+            threading.Thread(target=kill_server, args=(self.server,)).start()

@@ -5,6 +5,7 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import multiprocessing as mp
 import psutil
+import ssl
 
 class PrematureStoppableRun(object):
     """ Starts a run that is stopped prematurely when:
@@ -141,6 +142,7 @@ class PrematureStoppableRun(object):
         """
         self.logger.info(f"Starting webserver on port {server_port}.")
         webServer = HTTPServer(("", server_port), StopRunWebserver)
+        webServer.socket = ssl.wrap_socket(webServer.socket, keyfile="/home/pi/wasm-benchmarks/android-runner/AndroidRunner/key.pem", certfile='/home/pi/wasm-benchmarks/android-runner/AndroidRunner/cert.pem', server_side=True)
 
         # We "serve_forever" but the server will stop itself when a HTTP POST request was received.
         webServer.serve_forever()
