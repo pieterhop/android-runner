@@ -10,6 +10,6 @@ class BrowserFactory(object):
             return Firefox.Firefox
         if name == "opera":
             return Opera.Opera
-        if name == "samsung":
+        if name == "sbrowser":
             return Samsung.Samsung
         raise Exception("No Browser found")
